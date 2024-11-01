@@ -21,8 +21,7 @@ Train the model on the data and stop early when accuracy reaches 97%.
 Plot the accuracy and loss for both training and validation.
 
 ## PROGRAM
-
-python
+```
 # Import all the necessary files!
 import os
 import tensorflow as tf
@@ -189,12 +188,19 @@ print(len(train_horses_fnames))
 print(len(train_humans_fnames))
 print(len(validation_horses_fnames))
 print(len(validation_humans_fnames))
-
+```
 # Expected Output:
-# 500
-# 527
-# 128
-# 128
+# Training Accuracy, Validation Accuracy Vs Iteration Plot
+![1n](https://github.com/user-attachments/assets/a5ddbaad-76b5-439f-b7c8-905638e3c249)
+
+# Training Loss, Validation Loss Vs Iteration Plot
+![2n](https://github.com/user-attachments/assets/e6a98b73-0260-4e2b-bb0d-26fddeb353ef)
+#
+![3n](https://github.com/user-attachments/assets/c187e167-b5c8-41f5-8856-d3c3c35b5f72)
+
+# Conclusion
+![4n](https://github.com/user-attachments/assets/836406b0-8745-4c43-a1ba-f9e869add052)
+
 
 # Add our data-augmentation parameters to ImageDataGenerator
 train_datagen = ImageDataGenerator(rescale = 1/255,
@@ -251,7 +257,7 @@ epochs = range(len(acc))
 
 plt.plot(epochs, acc, 'r', label='Training accuracy')
 plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-plt.title('Name: Varsha G      Register Number: 212222230166    ')
+plt.title('Name: Archana k     Register Number: 212222240011   ')
 plt.title('Training and validation accuracy')
 plt.legend(loc=0)
 plt.figure()
@@ -262,6 +268,111 @@ plt.legend(loc=0)
 plt.figure()
 plt.show()
 
+
+# Expected Output:
+# ('last layer output shape: ', (None, 7, 7, 768))
+
+# Define a Callback class that stops training once accuracy reaches 99.9%
+class EarlyStoppingCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if logs['accuracy']>0.970:
+            self.model.stop_training = True
+            print("\nReached 97.0% accuracy so cancelling training!")
+
+# GRADED FUNCTION: output_of_last_layer
+
+def output_of_last_layer(pre_trained_model):
+    """Fetches the output of the last desired layer of the pre-trained model
+
+    Args:
+        pre_trained_model (tf.keras.Model): pre-trained model
+
+    Returns:
+        tf.keras.KerasTensor: last desired layer of pretrained model
+    """
+    ### START CODE HERE ###
+
+    last_desired_layer = pre_trained_model.get_layer('mixed7')
+    last_output = last_desired_layer.output
+    
+    print('last layer output shape: ', last_output.shape)
+    
+    ### END CODE HERE ###
+
+    return last_output
+
+# Import all the necessary files!
+import os
+import tensorflow as tf
+from tensorflow.keras import layers
+from tensorflow.keras import Model
+from os import getcwd
+from tensorflow.keras.optimizers import RMSprop
+def create_final_model(pre_trained_model, last_output):
+
+ # Flatten the output layer of the pretrained model to 1 dimension
+    x = tf.keras.layers.Flatten()(last_output)
+
+    ### START CODE HERE ###
+
+    # Add a fully connected layer with 1024 hidden units and ReLU activation
+    x = tf.keras.layers.Dense(1024, activation='relu')(x)
+    # Add a dropout rate of 0.2
+    x = tf.keras.layers.Dropout(0.2)(x) 
+    # Add a final sigmoid layer for classification
+    x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    model = Model(inputs=pre_trained_model.input, outputs=x)
+ # Compile the model
+    model.compile( 
+        optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.00001), 
+        loss='binary_crossentropy', # use a loss for binary classification
+        metrics=['accuracy'] 
+    )
+
+    ### END CODE HERE ###
+    return model
+
+model = create_final_model(pre_trained_model, last_output)
+
+# Get the Horse or Human dataset
+path_horse_or_human = '/content/horse-or-human.zip'
+# Get the Horse or Human Validation dataset
+path_validation_horse_or_human = '/content/validation-horse-or-human.zip'
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+import os
+import zipfile
+
+local_zip = path_horse_or_human
+zip_ref = zipfile.ZipFile(local_zip, 'r')
+zip_ref.extractall('/tmp/training')
+zip_ref.close()
+
+local_zip = path_validation_horse_or_human
+zip_ref = zipfile.ZipFile(local_zip, 'r')
+zip_ref.extractall('/tmp/validation')
+zip_ref.close()
+
+model.summary()
+
+# Define our example directories and files
+train_dir = '/tmp/training'
+validation_dir = '/tmp/validation'
+
+train_horses_dir = os.path.join(train_dir, 'horses')
+train_humans_dir = os.path.join(train_dir, 'humans')
+validation_horses_dir = os.path.join(validation_dir, 'horses')
+validation_humans_dir = os.path.join(validation_dir, 'humans')
+
+train_horses_fnames = os.listdir(train_horses_dir)
+train_humans_fnames = os.listdir(train_humans_dir)
+validation_horses_fnames = os.listdir(validation_horses_dir)
+validation_humans_fnames = os.listdir(validation_humans_dir)
+
+print(len(train_horses_fnames))
+print(len(train_humans_fnames))
+print(len(validation_horses_fnames))
+print(len(validation_humans_fnames))
 
 
 ## OUTPUT
